@@ -1,11 +1,606 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Prototipo Control Aduanero</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sistema de Control Aduanero - Prototipo</title>
+  <style>
+    :root{
+      --brand:#0b4f8a;
+      --bg:#f3f6fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e5e7eb;
+      --btn:#0b1220;
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --info:#3b82f6;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg); color:var(--text);
+    }
+    header{
+      background:linear-gradient(180deg, #0b4f8a 0%, #083a68 100%);
+      color:#fff; padding:18px 16px;
+    }
+    .wrap{max-width:1050px; margin:0 auto;}
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      font-weight:800; font-size:26px;
+    }
+    .brand .shield{
+      width:34px; height:34px; border:2px solid rgba(255,255,255,.7);
+      border-radius:10px; display:grid; place-items:center;
+      font-weight:900;
+    }
+    .subtitle{opacity:.9; margin-top:4px; font-size:14px}
+    .meta{
+      background:#eaf2ff; border-bottom:1px solid var(--border);
+      padding:10px 16px; color:#1f2937;
+    }
+    .meta .row{display:flex; gap:18px; align-items:center; flex-wrap:wrap;}
+    .pill{display:inline-flex; align-items:center; gap:8px; color:var(--muted); font-size:13px;}
+    .dot{width:10px; height:10px; border-radius:999px; background:var(--ok)}
+    nav{
+      margin:14px auto 0; padding:0 16px;
+    }
+    .tabs{
+      background:var(--card); border:1px solid var(--border);
+      border-radius:14px; display:flex; gap:6px; padding:6px;
+      overflow:auto;
+    }
+    .tab{
+      border:0; background:transparent; padding:10px 12px;
+      border-radius:12px; cursor:pointer; white-space:nowrap;
+      font-weight:600; color:#111827;
+    }
+    .tab.active{
+      background:#f1f5f9; outline:2px solid #dbeafe;
+    }
+    main{padding:14px 16px 40px;}
+    .card{
+      background:var(--card); border:1px solid var(--border);
+      border-radius:16px; padding:16px; margin-top:12px;
+      box-shadow:0 1px 0 rgba(15,23,42,.03);
+    }
+    .card h2{
+      font-size:18px; margin:0 0 12px; display:flex; gap:10px; align-items:center;
+    }
+    .grid{
+      display:grid; grid-template-columns:1fr 1fr; gap:12px;
+    }
+    @media (max-width:820px){
+      .grid{grid-template-columns:1fr}
+      .brand{font-size:22px}
+    }
+    label{display:block; font-size:13px; color:#111827; font-weight:700; margin:0 0 6px;}
+    .req{color:#ef4444; margin-left:6px}
+    input, select, textarea{
+      width:100%; padding:11px 12px; border-radius:12px;
+      border:1px solid var(--border); background:#f8fafc; outline:none;
+      font-size:14px;
+    }
+    textarea{min-height:90px; resize:vertical;}
+    .actions{margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .btn{
+      background:var(--btn); color:#fff; border:0; padding:12px 14px;
+      border-radius:12px; font-weight:800; cursor:pointer; flex:1;
+      min-width:180px;
+    }
+    .btn.secondary{
+      background:#fff; color:#111827; border:1px solid var(--border); flex:0;
+      min-width:auto;
+    }
+    .toast{
+      display:none; margin-top:12px; padding:12px 12px; border-radius:12px;
+      border:1px solid var(--border); background:#f8fafc; color:#111827;
+    }
+    .toast.show{display:block;}
+    .toast.ok{border-color:#bbf7d0; background:#f0fdf4;}
+    .toast.warn{border-color:#fde68a; background:#fffbeb;}
+    .toast.bad{border-color:#fecaca; background:#fef2f2;}
+    table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden;}
+    th, td{padding:10px 10px; border-bottom:1px solid var(--border); text-align:left; font-size:13px;}
+    th{color:var(--muted); font-weight:800; background:#f8fafc; position:sticky; top:0;}
+    .badge{
+      display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px;
+      font-weight:800; font-size:12px; color:#fff;
+    }
+    .b-ok{background:var(--ok)}
+    .b-warn{background:var(--warn)}
+    .b-bad{background:var(--bad)}
+    .b-info{background:var(--info)}
+    .right{display:flex; justify-content:flex-end; gap:10px;}
+    footer{
+      color:var(--muted); font-size:13px; padding:16px; border-top:1px solid var(--border);
+      background:#fff;
+    }
+    .hide{display:none;}
+  </style>
 </head>
+
 <body>
-  <h1>Sistema de Control Aduanero</h1>
-  <p>Funcionario: Operador Aduanero</p>
+  <header>
+    <div class="wrap">
+      <div class="brand">
+        <div class="shield">🛡️</div>
+        Sistema de Control Aduanero
+      </div>
+      <div class="subtitle">Plataforma de gestión para funcionarios de Aduanas (prototipo funcional)</div>
+    </div>
+  </header>
+
+  <div class="meta">
+    <div class="wrap">
+      <div class="row">
+        <div><b>Usuario:</b> Funcionario Sistema</div>
+        <div><b>Rol:</b> Operador Aduanero</div>
+        <div class="pill"><span class="dot"></span> Sistemas Operativos</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="wrap">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-view="ingreso">Ingreso Pasajero</button>
+      <button class="tab" data-view="pdi">Validación PDI</button>
+      <button class="tab" data-view="manual">Revisión Manual</button>
+      <button class="tab" data-view="sag">Declaración SAG</button>
+      <button class="tab" data-view="reportes">Reportes</button>
+    </div>
+  </nav>
+
+  <main class="wrap">
+
+    
+    <section class="card" id="view-ingreso">
+      <h2>👤 Registrar Ingreso de Pasajero</h2>
+      <div class="grid">
+        <div>
+          <label>RUT/Pasaporte <span class="req">*</span></label>
+          <input id="ing_id" placeholder="Ej: 12.345.678-9 o AB123456" />
+        </div>
+        <div>
+          <label>Nombre Completo <span class="req">*</span></label>
+          <input id="ing_nombre" placeholder="Ingrese nombre completo" />
+        </div>
+        <div>
+          <label>Nacionalidad <span class="req">*</span></label>
+          <select id="ing_nac">
+            <option value="">Seleccione nacionalidad</option>
+            <option>Chilena</option>
+            <option>Argentina</option>
+            <option>Peruana</option>
+            <option>Boliviana</option>
+            <option>Otra</option>
+          </select>
+        </div>
+        <div>
+          <label>Fecha de Ingreso <span class="req">*</span></label>
+          <input id="ing_fecha" type="date" />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btn_ingresar">Registrar Ingreso</button>
+      </div>
+      <div class="toast ok" id="toast_ing_ok">✅ Registro ingresado con éxito.</div>
+      <div class="toast bad" id="toast_ing_bad">⚠️ Complete los campos obligatorios.</div>
+    </section>
+
+    
+    <section class="card hide" id="view-pdi">
+      <h2>🛂 Validar Identidad con PDI</h2>
+      <div>
+        <label>RUT/Pasaporte <span class="req">*</span></label>
+        <input id="pdi_id" placeholder="Ej: 12.345.678-9 o AB123456" />
+      </div>
+      <div class="actions">
+        <button class="btn" id="btn_pdi">Validar con PDI</button>
+      </div>
+      <div class="toast warn" id="toast_pdi_warn">
+        ⚠️ PDI no disponible. Se derivará a Revisión Manual.
+      </div>
+    </section>
+
+    
+    <section class="card hide" id="view-manual">
+      <h2>📝 Derivar a Revisión Manual</h2>
+      <div class="grid">
+        <div>
+          <label>RUT/Pasaporte</label>
+          <input id="man_id" placeholder="Opcional" />
+        </div>
+        <div>
+          <label>Nombre</label>
+          <input id="man_nombre" placeholder="Opcional" />
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label>Observación <span class="req">*</span></label>
+        <textarea id="man_obs" placeholder="Ingrese motivo de derivación a revisión manual"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btn_derivar">Derivar a Revisión Manual</button>
+      </div>
+      <div class="toast ok" id="toast_man_ok">✅ Caso creado en revisión manual.</div>
+      <div class="toast bad" id="toast_man_bad">⚠️ Debe ingresar una observación.</div>
+
+      <div class="card" style="margin-top:16px;">
+        <h2>📌 Casos en Revisión Manual</h2>
+        <div style="overflow:auto;">
+          <table id="tabla_manual">
+            <thead>
+              <tr>
+                <th>ID</th><th>Identificación</th><th>Nombre</th><th>Observación</th>
+                <th>Fecha Derivación</th><th>Estado</th><th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-estado="pendiente">
+                <td>1</td><td>18.234.567-8</td><td>María González</td>
+                <td>Discrepancia en documento de identidad</td>
+                <td>21/01/2026 10:30</td>
+                <td><span class="badge b-warn">Pendiente</span></td>
+                <td class="right"><button class="btn secondary btn-resolver">Resolver</button></td>
+              </tr>
+              <tr data-estado="resuelto">
+                <td>2</td><td>US789456</td><td>John Smith</td>
+                <td>Validación PDI no disponible</td>
+                <td>21/01/2026 09:15</td>
+                <td><span class="badge b-ok">Resuelto</span></td>
+                <td class="right"><button class="btn secondary btn-reabrir">Reabrir</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin:10px 0 0; color:var(--muted); font-size:13px;">
+          (Prototipo) Acciones rápidas: Resolver / Reabrir para simular el flujo.
+        </p>
+      </div>
+    </section>
+
+    
+    <section class="card hide" id="view-sag">
+      <h2>🌿 Registrar Declaración SAG</h2>
+      <div class="grid">
+        <div>
+          <label>RUT/Pasaporte del Declarante <span class="req">*</span></label>
+          <input id="sag_id" placeholder="Ej: 12.345.678-9 o AB123456" />
+        </div>
+        <div>
+          <label>Cantidad</label>
+          <input id="sag_cant" placeholder="Ej: 2 kg, 500 g" />
+        </div>
+        <div>
+          <label>Productos/Alimentos <span class="req">*</span></label>
+          <input id="sag_prod" placeholder="Ej: frutas, semillas, carnes" />
+        </div>
+        <div>
+          <label>Descripción Adicional</label>
+          <input id="sag_desc" placeholder="Información adicional (opcional)" />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btn_sag">Enviar a SAG</button>
+      </div>
+      <div class="toast ok" id="toast_sag_ok">✅ Declaración enviada (estado: En revisión).</div>
+      <div class="toast bad" id="toast_sag_bad">⚠️ Complete los campos obligatorios.</div>
+
+      <div class="card" style="margin-top:16px;">
+        <h2>📄 Declaraciones SAG</h2>
+        <div style="overflow:auto;">
+          <table id="tabla_sag">
+            <thead>
+              <tr>
+                <th>ID</th><th>Identificación</th><th>Productos</th><th>Cantidad</th>
+                <th>Fecha Envío</th><th>Estado</th><th>Observaciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td><td>16.123.456-7</td><td>Frutas frescas</td><td>2 kg</td>
+                <td>21/01/2026 10:45</td><td><span class="badge b-info">En revisión</span></td><td>-</td>
+              </tr>
+              <tr>
+                <td>2</td><td>AR456789</td><td>Semillas de trigo</td><td>500 g</td>
+                <td>21/01/2026 09:30</td><td><span class="badge b-ok">Aprobada</span></td><td>Documentación completa</td>
+              </tr>
+              <tr>
+                <td>3</td><td>19.876.543-2</td><td>Productos lácteos</td><td>1 kg</td>
+                <td>21/01/2026 08:15</td><td><span class="badge b-bad">Rechazada</span></td><td>No cumple normativa sanitaria</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="card hide" id="view-reportes">
+      <h2>📊 Consultar Reportes</h2>
+      <div class="grid">
+        <div>
+          <label>Fecha Inicio</label>
+          <input id="rep_ini" type="date" />
+        </div>
+        <div>
+          <label>Fecha Fin</label>
+          <input id="rep_fin" type="date" />
+        </div>
+        <div>
+          <label>Tipo de Movimiento</label>
+          <select id="rep_tipo">
+            <option value="Todos">Todos</option>
+            <option value="Ingreso Pasajero">Ingreso Pasajero</option>
+            <option value="Validación PDI">Validación PDI</option>
+            <option value="Revisión Manual">Revisión Manual</option>
+            <option value="Declaración SAG">Declaración SAG</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-end;">
+          <button class="btn" id="btn_rep" style="flex:1;">Consultar</button>
+          <button class="btn secondary" id="btn_limpiar">Limpiar</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <h2 style="margin:0;">📋 Resultados</h2>
+          <button class="btn secondary" id="btn_exportar">Exportar CSV</button>
+        </div>
+        <div style="overflow:auto; margin-top:10px;">
+          <table id="tabla_rep">
+            <thead>
+              <tr>
+                <th>ID</th><th>Fecha/Hora</th><th>Tipo Movimiento</th><th>Identificación</th>
+                <th>Nombre</th><th>Detalles</th><th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+             
+            </tbody>
+          </table>
+        </div>
+        <p style="margin:10px 0 0; color:var(--muted); font-size:13px;">
+          (Prototipo) Consulta por tipo de movimiento. Exporta un CSV para evidencia.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="wrap" style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <div>© 2026 Sistema de Control Aduanero — Gobierno de Chile</div>
+      <div>Versión 1.0.0</div>
+    </div>
+  </footer>
+
+<script>
+
+  const views = ["ingreso","pdi","manual","sag","reportes"];
+  const tabBar = document.getElementById("tabs");
+  const showView = (name) => {
+    views.forEach(v => {
+      document.getElementById("view-"+v).classList.toggle("hide", v !== name);
+    });
+    [...tabBar.querySelectorAll(".tab")].forEach(b => {
+      b.classList.toggle("active", b.dataset.view === name);
+    });
+  };
+  tabBar.addEventListener("click", (e) => {
+    const btn = e.target.closest(".tab");
+    if(!btn) return;
+    showView(btn.dataset.view);
+  });
+
+  
+  const showToast = (id) => {
+    const el = document.getElementById(id);
+    el.classList.add("show");
+    setTimeout(()=> el.classList.remove("show"), 2500);
+  };
+  const nowText = () => {
+    const d = new Date();
+    const pad = (n)=> String(n).padStart(2,"0");
+    return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  
+  document.getElementById("btn_ingresar").addEventListener("click", () => {
+    const id = document.getElementById("ing_id").value.trim();
+    const nom = document.getElementById("ing_nombre").value.trim();
+    const nac = document.getElementById("ing_nac").value.trim();
+    const fec = document.getElementById("ing_fecha").value.trim();
+    if(!id || !nom || !nac || !fec){
+      showToast("toast_ing_bad"); return;
+    }
+    showToast("toast_ing_ok");
+   
+    addReporte({
+      tipo:"Ingreso Pasajero",
+      ident:id, nombre:nom,
+      detalles:"Ingreso por paso fronterizo",
+      estado:{label:"Registrado", cls:"b-info"}
+    });
+  });
+
+  
+  document.getElementById("btn_pdi").addEventListener("click", () => {
+    const id = document.getElementById("pdi_id").value.trim();
+    if(!id){ showToast("toast_ing_bad"); return; }
+    showToast("toast_pdi_warn");
+    
+    document.getElementById("man_id").value = id;
+    document.getElementById("man_obs").value = "Validación PDI no disponible";
+    addReporte({
+      tipo:"Validación PDI",
+      ident:id, nombre:"-",
+      detalles:"PDI no disponible",
+      estado:{label:"Derivado", cls:"b-warn"}
+    });
+    setTimeout(()=> showView("manual"), 900);
+  });
+
+ 
+  document.getElementById("btn_derivar").addEventListener("click", () => {
+    const id = document.getElementById("man_id").value.trim() || "-";
+    const nom = document.getElementById("man_nombre").value.trim() || "-";
+    const obs = document.getElementById("man_obs").value.trim();
+    if(!obs){ showToast("toast_man_bad"); return; }
+    showToast("toast_man_ok");
+   
+    const tbody = document.querySelector("#tabla_manual tbody");
+    const newId = tbody.querySelectorAll("tr").length + 1;
+    const tr = document.createElement("tr");
+    tr.dataset.estado = "pendiente";
+    tr.innerHTML = `
+      <td>${newId}</td>
+      <td>${escapeHtml(id)}</td>
+      <td>${escapeHtml(nom)}</td>
+      <td>${escapeHtml(obs)}</td>
+      <td>${nowText()}</td>
+      <td><span class="badge b-warn">Pendiente</span></td>
+      <td class="right"><button class="btn secondary btn-resolver">Resolver</button></td>
+    `;
+    tbody.prepend(tr);
+    addReporte({
+      tipo:"Revisión Manual",
+      ident:id, nombre:nom,
+      detalles:obs,
+      estado:{label:"Pendiente", cls:"b-warn"}
+    });
+  });
+
+  
+  document.getElementById("tabla_manual").addEventListener("click", (e) => {
+    const tr = e.target.closest("tr");
+    if(!tr) return;
+
+    if(e.target.classList.contains("btn-resolver")){
+      tr.dataset.estado = "resuelto";
+      tr.children[5].innerHTML = `<span class="badge b-ok">Resuelto</span>`;
+      tr.children[6].innerHTML = `<button class="btn secondary btn-reabrir">Reabrir</button>`;
+      addReporte({
+        tipo:"Revisión Manual",
+        ident: tr.children[1].textContent,
+        nombre: tr.children[2].textContent,
+        detalles:"Caso resuelto",
+        estado:{label:"Resuelto", cls:"b-ok"}
+      });
+    }
+    if(e.target.classList.contains("btn-reabrir")){
+      tr.dataset.estado = "pendiente";
+      tr.children[5].innerHTML = `<span class="badge b-warn">Pendiente</span>`;
+      tr.children[6].innerHTML = `<button class="btn secondary btn-resolver">Resolver</button>`;
+      addReporte({
+        tipo:"Revisión Manual",
+        ident: tr.children[1].textContent,
+        nombre: tr.children[2].textContent,
+        detalles:"Caso reabierto",
+        estado:{label:"Pendiente", cls:"b-warn"}
+      });
+    }
+  });
+
+  
+  document.getElementById("btn_sag").addEventListener("click", () => {
+    const id = document.getElementById("sag_id").value.trim();
+    const prod = document.getElementById("sag_prod").value.trim();
+    if(!id || !prod){ showToast("toast_sag_bad"); return; }
+    showToast("toast_sag_ok");
+   
+    const tbody = document.querySelector("#tabla_sag tbody");
+    const newId = tbody.querySelectorAll("tr").length + 1;
+    const cant = document.getElementById("sag_cant").value.trim() || "-";
+    const obs = document.getElementById("sag_desc").value.trim() || "-";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${newId}</td><td>${escapeHtml(id)}</td><td>${escapeHtml(prod)}</td><td>${escapeHtml(cant)}</td>
+      <td>${nowText()}</td><td><span class="badge b-info">En revisión</span></td><td>${escapeHtml(obs)}</td>
+    `;
+    tbody.prepend(tr);
+
+    addReporte({
+      tipo:"Declaración SAG",
+      ident:id, nombre:"-",
+      detalles:`${prod} - ${cant}`,
+      estado:{label:"En revisión", cls:"b-info"}
+    });
+  });
+
+  const dataReportes = [
+    {id:1, fecha:"21/01/2026 10:45", tipo:"Ingreso Pasajero", ident:"16.123.456-7", nombre:"Carlos Muñoz", detalles:"Ingreso por paso fronterizo", estado:{label:"Registrado", cls:"b-info"}},
+    {id:2, fecha:"21/01/2026 10:30", tipo:"Validación PDI", ident:"18.234.567-8", nombre:"María González", detalles:"Identidad no validada", estado:{label:"Derivado", cls:"b-warn"}},
+    {id:3, fecha:"21/01/2026 09:30", tipo:"Declaración SAG", ident:"AR456789", nombre:"Roberto Fernández", detalles:"Semillas de trigo - 500g", estado:{label:"Aprobado", cls:"b-ok"}},
+    {id:4, fecha:"21/01/2026 09:15", tipo:"Revisión Manual", ident:"US789456", nombre:"John Smith", detalles:"Validación PDI no disponible", estado:{label:"Resuelto", cls:"b-ok"}},
+  ];
+
+  const renderReportes = (tipo = "Todos") => {
+    const tbody = document.querySelector("#tabla_rep tbody");
+    tbody.innerHTML = "";
+    const filtered = dataReportes.filter(r => tipo === "Todos" ? true : r.tipo === tipo);
+    filtered.forEach((r, idx) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td>${r.fecha}</td>
+        <td>${r.tipo}</td>
+        <td>${escapeHtml(r.ident)}</td>
+        <td>${escapeHtml(r.nombre)}</td>
+        <td>${escapeHtml(r.detalles)}</td>
+        <td><span class="badge ${r.estado.cls}">${r.estado.label}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  };
+
+  function addReporte({tipo, ident, nombre, detalles, estado}){
+    dataReportes.unshift({
+      id: dataReportes.length + 1,
+      fecha: nowText(),
+      tipo, ident, nombre, detalles,
+      estado
+    });
+    renderReportes(document.getElementById("rep_tipo").value || "Todos");
+  }
+
+  document.getElementById("btn_rep").addEventListener("click", () => {
+    renderReportes(document.getElementById("rep_tipo").value || "Todos");
+  });
+  document.getElementById("btn_limpiar").addEventListener("click", () => {
+    document.getElementById("rep_ini").value = "";
+    document.getElementById("rep_fin").value = "";
+    document.getElementById("rep_tipo").value = "Todos";
+    renderReportes("Todos");
+  });
+
+  document.getElementById("btn_exportar").addEventListener("click", () => {
+    const tipo = document.getElementById("rep_tipo").value || "Todos";
+    const filtered = dataReportes.filter(r => tipo === "Todos" ? true : r.tipo === tipo);
+    const rows = [
+      ["Fecha/Hora","Tipo Movimiento","Identificación","Nombre","Detalles","Estado"],
+      ...filtered.map(r => [r.fecha,r.tipo,r.ident,r.nombre,r.detalles,r.estado.label])
+    ];
+    const csv = rows.map(r => r.map(cell => `"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "reportes_aduanas.csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  function escapeHtml(str){
+    return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+
+  // Inicial
+  renderReportes("Todos");
+</script>
 </body>
 </html>
